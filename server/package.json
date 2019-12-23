@@ -1,0 +1,31 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Server for 2dv515's assignment 3",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "lint:fix": "npx eslint . --fix"
+  },
+  "keywords": [
+    "Server",
+    "RESTAPI",
+    "Search",
+    "Engine"
+  ],
+  "author": "Anton Strand",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^6.7.2",
+    "eslint-plugin-better": "^0.1.5",
+    "eslint-plugin-fp": "^2.3.0",
+    "eslint-plugin-prefer-arrow": "^1.1.7",
+    "nodemon": "^2.0.1"
+  },
+  "dependencies": {
+    "crocks": "^0.12.4",
+    "list": "^2.0.19",
+    "paperplane": "^3.1.1",
+    "ramda": "^0.26.1"
+  }
+}
