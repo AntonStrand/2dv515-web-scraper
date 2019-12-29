@@ -33,15 +33,26 @@ const isWikiArticle = and(
 /** allProp :: [{k: v}] -> [v] */
 const allProp = key => pipe(values, map(prop(key)))
 
-const removeHTML = replace(/(<([^>]+)>)/gi, '')
+const removeHTML = replace(/(<([^>]+)>)/gi, ' ')
 
 get('https://en.wikipedia.org/wiki/Batman')
   .map(prop('data'))
+  .map(parseToBody)
   .map(branch)
-  .map(map(parseToBody))
   .map(map(queryAll('a')))
   .map(map(allProp('href')))
   .map(map(filter(isWikiArticle)))
   .fork(console.error, pair =>
-    console.log(trimWS(clean(removeHTML(sanitize(pair.fst())))))
+    console.log(
+      trimWS(
+        clean(
+          removeHTML(
+            sanitize(
+              pair.fst().querySelector('#bodyContent #mw-content-text')
+                .innerHTML
+            )
+          )
+        )
+      )
+    )
   )
