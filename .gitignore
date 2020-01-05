@@ -62,3 +62,7 @@ typings/
 
 # Misc
 .DS_Store
+
+# Ignore data sets
+scraper/HTML
+server/dataset
