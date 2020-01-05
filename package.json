@@ -1,10 +1,11 @@
 {
   "name": "2dv515-a3-search-engine",
   "version": "1.0.0",
-  "description": "My solution for assignment 3 in Web Intelligence (2DV515) at Linnaeus University",
+  "description": "My solution for the project in Web Intelligence (2DV515) at Linnaeus University",
   "main": "index.js",
   "scripts": {
-    "install": "cd server && npm install && cd ../client && npm install && cd ..",
+    "install": "cd server && npm install && cd ../client && npm install && cd ../scraper && npm install && npm start && cd ..",
+    "postinstall": "echo Server is ready to be started by running 'npm start'",
     "start": "npm-run-all -p start:* -- --watch || 0",
     "start:client": "cd client && npm start",
     "start:server": "cd server && npm start"
@@ -19,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AntonStrand/2DV515-A3-search-engine.git"
+    "url": "git+https://github.com/AntonStrand/2dv515-web-scraper.git"
   },
   "author": "Anton Strand",
   "license": "ISC",

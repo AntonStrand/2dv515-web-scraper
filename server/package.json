@@ -4,6 +4,7 @@
   "description": "Server for 2dv515's assignment 3",
   "main": "index.js",
   "scripts": {
+    "postinstall": "mkdir -p dataset/{Links,Words}",
     "start": "nodemon src/index.js",
     "lint:fix": "npx eslint . --fix"
   },
@@ -13,6 +14,10 @@
     "Search",
     "Engine"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AntonStrand/2dv515-web-scraper.git"
+  },
   "author": "Anton Strand",
   "license": "ISC",
   "devDependencies": {
