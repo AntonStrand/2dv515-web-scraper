@@ -1,32 +1,27 @@
-# Search Engine
-My solution for Web intelligence (2DV515) assignment 3 at Linnaeus University.
+# Web scraper
+My solution for Web intelligence (2DV515) project at Linnaeus University.
 
 ## Requirements
+In this project you shall use a web scraping library to download articles that can be used in your search engine from Assignment 3.
+
+When scraping a site such as Wikipedia, you usually start on one page and follow all outgoing links.
+
+You can download pages from Wikipedia or from any other site.
+
 ### Grade E
-- [x] Implement a basic search engine that index all pages in the Wikipedia dataset (see Datasets page)
-- [x] Search queries shall only contain single words
-- [x] Results shall be ranked using the word frequency metric
-- [x] The user shall input the search queries in a web client, and display the search results returned from the server
-- [x] Display the top 5 search results with page and rank score
-- [x] Implement the system using a REST web service where:
-  - [x] client sends a request to a server
-  - [x] the server responds with json data
-  - [x] the json data is decoded and presented in a client GUI
+- [x] Scrape and store raw HTML for at least 200 pages
 
 ### Grade C-D
-- [x] It shall be possible to use search queries of more than one word
-- [x] Results shall be ranked using: `score = word_frequency + 0.8 * document_location`
-- [x] Display the top 5 search results with page and rank score
+- [x] Parse the raw HTML files to generate a dataset similar to the Wikipedia dataset from Assignment 3
+- [x] For each article, the dataset shall contain a file with all words in the article and another file with all outgoing links in the article
 
 ### Grade A-B
-- [x] Implement the PageRank algorithm and use it to rank the search results
-- [x] Run the algorithm for 20 iterations
-- [x] Results shall be ranked using: `score = word_frequency + 0.8 * document_location + 0.5 * pagerank`
-- [x] Display the top 5 search results with page and rank score
+- [x] Use the dataset with your search engine from Assignment 3
+- [x] Use both content-based ranking and PageRank to rank search results
 
 ## Get started
 #### `npm install`
-Will install all dependencies for both client and server.
+Will install all dependencies for scraper, client and server. It will also scrape 200 wiki articles.
 
 #### `npm start`
 Will start both client and server.
