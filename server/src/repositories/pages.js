@@ -26,7 +26,11 @@ const fullPaths = path =>
   )
 
 /** toLinks :: String -> Set String */
-const toLinks = pipe (lines, map (concat ('https://en.wikipedia.org')), xs => new Set (xs))
+const toLinks = pipe (
+  lines,
+  map (concat ('https://en.wikipedia.org')),
+  xs => new Set (xs)
+)
 
 /** getPageLinks :: String -> Async Error List (Set String) */
 const getPageLinks = path =>
@@ -35,10 +39,7 @@ const getPageLinks = path =>
     .map (List.from)
 
 /** toWordIds :: String -> List Number */
-const toWordIds = pipe (
-  words,
-  List.map (wordToId)
-)
+const toWordIds = pipe (words, List.map (wordToId))
 
 /** readPageFiles :: Async List Pair String String -> Async List (Pair String List Number) */
 const readPageFiles = pipe (
@@ -48,29 +49,16 @@ const readPageFiles = pipe (
 )
 
 /** getPageContent :: String -> Async List (Pair String List Number) */
-const getPageContent = pipe (
-  fullPaths,
-  readPageFiles
-)
-
-/** allPageLinks :: Async Error (List Set String) */
-const allPageLinks = liftA2 (
-  List.concat,
-  getPageLinks ('./dataset/Links/Programming/'),
-  getPageLinks ('./dataset/Links/Games/')
-)
-
-/** allPageContent :: Async Error (List Pair String List Number) */
-const allPageContent = liftA2 (
-  List.concat,
-  getPageContent ('./dataset/Words/Programming/'),
-  getPageContent ('./dataset/Words/Games/')
-)
+const getPageContent = pipe (fullPaths, readPageFiles)
 
 /** toPage :: (Set String, Pair String List Number) -> Page */
 const toPage = (links, { fst, snd }) => Page.of (fst (), snd (), links, 1)
 
 const readPages = () =>
-  liftA2 (List.zipWith (toPage), allPageLinks, allPageContent)
+  liftA2 (
+    List.zipWith (toPage),
+    getPageLinks ('./dataset/Links/'),
+    getPageContent ('./dataset/Words/')
+  )
 
-module.exports = readPages ().map (calculatePageRank (20))
+module.exports = map (calculatePageRank (20), readPages ())
