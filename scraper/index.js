@@ -95,13 +95,24 @@ const pairToArray = pair => pair.toArray()
 /** concat :: a -> a -> [a] */
 const concat = x => y => (Array.isArray(y) ? y.concat(x) : [y].concat(x))
 
-/** :: String -> Async Pair String [Link] */
-const getArticleData = path =>
+/** :: String -> Async [String, String] */
+const saveArticleData = path =>
   get(`https://en.wikipedia.org${path}`)
     .map(prop('data'))
     .chain(writeFile(`./HTML/${articleName(path)}.html`))
     .map(parseToBody)
     .map(fanout(pageToWords, getLinks))
+    .map(
+      bimap(
+        writeFile(`../server/dataset/Words/${articleName(path)}`),
+        pipe(
+          formatLinks,
+          writeFile(`../server/dataset/Links/${articleName(path)}`)
+        )
+      )
+    )
+    .map(pairToArray)
+    .chain(sequence(Async))
 
 /** getArticleLinks :: String -> Async [String] */
 const getArticleLinks = path =>
@@ -123,14 +134,13 @@ const getAllLinks = (path, max, allLinks = []) =>
     )
     .map(take(max))
 
-// Save pair
-// .map(
-//   bimap(
-//     writeFile(`./Words/${articleName(path)}`),
-//     pipe(formatLinks, writeFile(`./Links/${articleName(path)}`))
-//   )
-// )
-// .map(pairToArray)
-// .chain(sequence(Async))
+/** main :: String -> () */
+const main = path =>
+  getAllLinks(path, 200)
+    .map(map(saveArticleData))
+    .chain(sequence(Async))
+    .fork(console.error, ({ length }) =>
+      console.log(`${length} articles based on "${path}" has been saved.`)
+    )
 
-getAllLinks('/wiki/Batman', 200).fork(console.error, x => console.log(x))
+main(process.argv[2])
