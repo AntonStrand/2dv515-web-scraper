@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "mkdir -p HTML",
-    "start": "node index.js /wiki/Batman"
+    "start": "time node index.js /wiki/Batman"
   },
   "keywords": [
     "web",
