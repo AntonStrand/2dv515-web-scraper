@@ -11,22 +11,22 @@ const not = require('crocks/logic/not')
 const jsdom = require('jsdom')
 const { JSDOM } = jsdom
 const virtualConsole = new jsdom.VirtualConsole()
+const sanitize = require('sanitize-html')
 const {
   filter,
-  head,
+  concat,
   join,
   last,
   pipe,
   prop,
   replace,
   split,
-  take,
+  tail,
   test,
   trim,
   values,
   uniq
 } = require('ramda')
-const sanitize = require('sanitize-html')
 
 const trimWS = replace(/\s+/g, ' ')
 const clean = pipe(replace(/[".,()[\]]/g, ' '), replace(/[^a-zA-Z0-9 ]/g, ''))
@@ -56,8 +56,8 @@ const allProp = key => pipe(values, map(prop(key)))
 
 const removeHTML = replace(/(<([^>]+)>)/gi, ' ')
 
-/** getWikiContent :: HTMLBodyElement -> HTMLElement */
-const getWikiContent = element =>
+/** getWikiContentElement :: HTMLBodyElement -> HTMLElement */
+const getWikiContentElement = element =>
   element.querySelector('#bodyContent #mw-content-text')
 
 /** innerHTML :: HTMLElement -> String */
@@ -65,7 +65,7 @@ const innerHTML = element => element.innerHTML
 
 /** pageToWords :: HTMLBodyElement -> String */
 const pageToWords = pipe(
-  getWikiContent,
+  getWikiContentElement,
   innerHTML,
   sanitize,
   removeHTML,
@@ -76,7 +76,7 @@ const pageToWords = pipe(
 
 /** getLinks :: HTMLBodyElement -> [Link] */
 const getLinks = pipe(
-  getWikiContent,
+  getWikiContentElement,
   queryAll('a'),
   allProp('href'),
   uniq,
@@ -92,11 +92,9 @@ const articleName = pipe(split('/'), last)
 /** pairToArray :: Pair a b -> [a, b] */
 const pairToArray = pair => pair.toArray()
 
-/** concat :: a -> a -> [a] */
-const concat = x => y => (Array.isArray(y) ? y.concat(x) : [y].concat(x))
-
-/** :: String -> Async [String, String] */
+/** saveArticleData :: String -> Async [Link] */
 const saveArticleData = path =>
+  console.log(path) ||
   get(`https://en.wikipedia.org${path}`)
     .map(prop('data'))
     .chain(writeFile(`./HTML/${articleName(path)}.html`))
@@ -113,34 +111,23 @@ const saveArticleData = path =>
     )
     .map(pairToArray)
     .chain(sequence(Async))
+    .map(pipe(last, split('\n')))
 
-/** getArticleLinks :: String -> Async [String] */
-const getArticleLinks = path =>
-  get(`https://en.wikipedia.org${path}`)
-    .map(prop('data'))
-    .map(parseToBody)
-    .map(getLinks)
-
-/** getAllLinks :: (String, Number, ?[String]) -> Async [String] */
-const getAllLinks = (path, max, allLinks = []) =>
-  getArticleLinks(path)
-    .map(concat(path))
-    .map(concat(allLinks))
-    .map(uniq)
-    .chain(links =>
-      links.length >= max
-        ? Async.of(links)
-        : getAllLinks(head(links), max, links)
-    )
-    .map(take(max))
+/** scrape :: Number -> [String] -> [String] -> Number */
+const scrape = max => visited => ([path, ...paths]) =>
+  max <= 0
+    ? Async.of(visited.length)
+    : visited.includes(path)
+    ? scrape(max)(visited)(paths)
+    : saveArticleData(path)
+        .map(concat(paths))
+        .map(tail)
+        .chain(scrape(max - 1)(visited.concat(path)))
 
 /** main :: String -> () */
 const main = path =>
-  getAllLinks(path, 200)
-    .map(map(saveArticleData))
-    .chain(sequence(Async))
-    .fork(console.error, ({ length }) =>
-      console.log(`${length} articles based on "${path}" has been saved.`)
-    )
+  scrape(200)([])([path]).fork(console.error, count =>
+    console.log(`\n${count} unique articles based on "${path}" has been saved.`)
+  )
 
 main(process.argv[2])
