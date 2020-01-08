@@ -13,8 +13,8 @@ const { JSDOM } = jsdom
 const virtualConsole = new jsdom.VirtualConsole()
 const sanitize = require('sanitize-html')
 const {
-  filter,
   concat,
+  filter,
   join,
   last,
   pipe,
@@ -28,9 +28,6 @@ const {
   uniq
 } = require('ramda')
 
-const trimWS = replace(/\s+/g, ' ')
-const clean = pipe(replace(/[".,()[\]]/g, ' '), replace(/[^a-zA-Z0-9 ]/g, ''))
-
 /** get :: String -> Async Error a */
 const get = Async.fromPromise(axios.get)
 
@@ -39,11 +36,28 @@ const writeFile = curry((path, data) =>
   Async.fromNode(fs.writeFile)(path, data).map(() => data)
 )
 
+/** truncateWhiteSpace :: String -> String */
+const truncateWhiteSpace = replace(/\s+/g, ' ')
+
+/** removeSpecialCharacters :: String -> String */
+const removeSpecialCharacters = pipe(
+  replace(/[".,()[\]]/g, ' '),
+  replace(/[^a-zA-Z0-9 ]/g, '')
+)
+
+/** removeHTML :: String -> String */
+const removeHTML = replace(/(<([^>]+)>)/gi, ' ')
+
 /** parseToBody :: String -> HTMLBodyElement */
 const parseToBody = html =>
   new JSDOM(html, { virtualConsole }).window.document.body
 
+/** queryAll :: String -> HTMLElement -> [HTMLElement] */
 const queryAll = curry((query, element) => element.querySelectorAll(query))
+
+/** getWikiContentElement :: HTMLBodyElement -> HTMLElement */
+const getWikiContentElement = element =>
+  element.querySelector('#bodyContent #mw-content-text')
 
 /** isWikiArticleLink :: String -> Boolean */
 const isWikiArticleLink = and(
@@ -51,26 +65,14 @@ const isWikiArticleLink = and(
   not(test(/^\/wiki\/Wikipedia|^\/wiki\/.*:.*/))
 )
 
-/** allProp :: [{k: v}] -> [v] */
-const allProp = key => pipe(values, map(prop(key)))
-
-const removeHTML = replace(/(<([^>]+)>)/gi, ' ')
-
-/** getWikiContentElement :: HTMLBodyElement -> HTMLElement */
-const getWikiContentElement = element =>
-  element.querySelector('#bodyContent #mw-content-text')
-
-/** innerHTML :: HTMLElement -> String */
-const innerHTML = element => element.innerHTML
-
 /** pageToWords :: HTMLBodyElement -> String */
 const pageToWords = pipe(
   getWikiContentElement,
-  innerHTML,
+  prop('innerHTML'),
   sanitize,
   removeHTML,
-  clean,
-  trimWS,
+  removeSpecialCharacters,
+  truncateWhiteSpace,
   trim
 )
 
@@ -78,7 +80,8 @@ const pageToWords = pipe(
 const getLinks = pipe(
   getWikiContentElement,
   queryAll('a'),
-  allProp('href'),
+  values,
+  map(prop('href')),
   uniq,
   filter(isWikiArticleLink)
 )
@@ -122,11 +125,11 @@ const scrape = max => visited => ([path, ...paths]) =>
     : saveArticleData(path)
         .map(concat(paths))
         .map(tail)
-        .chain(scrape(max - 1)(visited.concat(path)))
+        .chain(scrape(max - 1)([...visited, path]))
 
 /** main :: String -> () */
 const main = path =>
-  scrape(200)([])([path]).fork(console.error, count =>
+  scrape(20)([])([path]).fork(console.error, count =>
     console.log(`\n${count} unique articles based on "${path}" has been saved.`)
   )
 
