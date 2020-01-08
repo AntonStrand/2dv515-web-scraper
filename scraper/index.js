@@ -129,7 +129,7 @@ const scrape = max => visited => ([path, ...paths]) =>
 
 /** main :: String -> () */
 const main = path =>
-  scrape(20)([])([path]).fork(console.error, count =>
+  scrape(200)([])([path]).fork(console.error, count =>
     console.log(`\n${count} unique articles based on "${path}" has been saved.`)
   )
 
